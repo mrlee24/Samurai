@@ -41,9 +41,6 @@ DerivedDataCache/
 # Ignore iOS generated files
 Intermediate/iOS/
 
-# Ignore plugins
-Plugins/
-
 # Ignore plugin binaries
 **/Binaries/
 **/Intermediate/
