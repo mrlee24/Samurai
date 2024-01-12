@@ -47,7 +47,6 @@ Intermediate/iOS/
 
 # Ignore plugin-specific settings
 **/*.uprojectdirs
-**/*.uplugin
 **/*.sln
 **/*.suo
 **/*.xcworkspace/
