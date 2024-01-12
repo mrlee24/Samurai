@@ -20,10 +20,6 @@ protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float deltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float deltaSeconds) override;
-
-protected: // ~ Utils ~
-
-	bool IsMovingForwardOrBackward(const ESamuraiCardinalDirection direction) const;
 	
 protected: // ~ Getters ~
 
@@ -148,12 +144,13 @@ protected: // ~ Helpers ~
 	 * @param dirMax The maximum angle for the valid movement direction range.
 	 * @param buffer A buffer added to adjust the movement direction range.
 	 * @param outMovementDirection Reference to an output parameter for the calculated movement direction.
-	 * @param outBlendSpaceDir Reference to an output parameter for the calculated blend space direction.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	void CalculateMovementDirection(const float directionAngle, const float dirMin, const float dirMax,
-	                                const float buffer, ESamuraiMovementDirection& outMovementDirection,
-	                                float& outBlendSpaceDir) const;
+	                                const float buffer, ESamuraiMovementDirection& outMovementDirection) const;
+	
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	void CalculateBlendSpaceDirection(const float directionAngle, float& outBlendSpaceDir) const;
 
 protected:
 
@@ -187,12 +184,11 @@ protected:
 	
 	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Selector Functions", meta = (BlueprintThreadSafe))
 	class UBlendSpace* SelectCycleAnimationPose(const ESamuraiStance stance,
-	                                            const FGameplayTag& locomotionStateTag) const;
+	                                            const FGameplayTag locomotionStateTag) const;
 	
 	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Selector Functions", meta = (BlueprintThreadSafe))
 	class UBlendSpace* SelectCycleAnimation(const ESamuraiMovementDirection movementDirection,
-											const ESamuraiStance stance,
-	                                        const FGameplayTag& locomotionStateTag) const;
+											const ESamuraiStance stance, const FGameplayTag locomotionStateTag) const;
 	
 protected:
 

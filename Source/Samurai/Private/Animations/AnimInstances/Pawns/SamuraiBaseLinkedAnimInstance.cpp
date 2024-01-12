@@ -36,11 +36,6 @@ void USamuraiBaseLinkedAnimInstance::NativeThreadSafeUpdateAnimation(float delta
 	// CalculateStrideBlendAndPlayRate(animationSettings.AnimatedSpeed, animationSettings.StrideBlendRange, animationSettings.PlayRateClamp, StrideBlend, PlayRate);
 }
 
-bool USamuraiBaseLinkedAnimInstance::IsMovingForwardOrBackward(const ESamuraiCardinalDirection direction) const
-{
-	return (direction == ESamuraiCardinalDirection::EForward || direction == ESamuraiCardinalDirection::EBackward);
-}
-
 void USamuraiBaseLinkedAnimInstance::SetPivotMovementDirection(const ESamuraiMovementDirection pivotMovementDirection)
 {
 	PivotMovementDirection = pivotMovementDirection;
@@ -73,7 +68,7 @@ USamuraiBaseAnimInstance* USamuraiBaseLinkedAnimInstance::GetBaseMainAnimInstanc
 
 ESamuraiMovementDirection USamuraiBaseLinkedAnimInstance::GetMovementDirection() const
 {
-	return (IsOnPivot() && !IsMovingForwardOrBackward() ? PivotMovementDirection : MovementDirection);
+	return MovementDirection;
 }
 
 bool USamuraiBaseLinkedAnimInstance::IsLocomotionStateTagActive(FGameplayTag locomotionStateTag) const
@@ -196,7 +191,7 @@ void USamuraiBaseLinkedAnimInstance::CalculateStrideBlendAndPlayRate(const float
 
 void USamuraiBaseLinkedAnimInstance::CalculateMovementDirection(const float directionAngle,
                                                                 const float dirMin, const float dirMax,
-                                                                const float buffer, ESamuraiMovementDirection& outMovementDirection, float& outBlendSpaceDir) const
+                                                                const float buffer, ESamuraiMovementDirection& outMovementDirection) const
 {
 	// Retrieve the current direction from the provided angle.
 	const float currentDirection = directionAngle;
@@ -207,28 +202,29 @@ void USamuraiBaseLinkedAnimInstance::CalculateMovementDirection(const float dire
 	{
 		// Check if the current direction is within the forward range with the specified buffer.
 		isForward = USamuraiAnimationBPLibrary::InRange(FMath::Abs(currentDirection),
-														dirMin - dirMax,
+														dirMin + dirMax,
 														dirMax + buffer);
 	}
 	else
 	{
 		// Check if the current direction is within the reverse range with the specified buffer.
 		isForward = USamuraiAnimationBPLibrary::InRange(FMath::Abs(currentDirection),
-														dirMin + buffer,
-														dirMax - buffer);
+														dirMin - dirMax,
+														dirMax + buffer);
 	}
 
+	outMovementDirection = (isForward) ? ESamuraiMovementDirection::EForward : ESamuraiMovementDirection::EBackward;
+}
+
+void USamuraiBaseLinkedAnimInstance::CalculateBlendSpaceDirection(const float directionAngle, float& outBlendSpaceDir) const
+{
 	// Update output variables based on the calculated movement direction.
-	if (isForward)
+	if (IsMovementDirectionForward())
 	{
-		outMovementDirection = ESamuraiMovementDirection::EForward;
 		outBlendSpaceDir = directionAngle;
 	}
 	else
 	{
-		// Set movement direction to backward if not forward.
-		outMovementDirection = ESamuraiMovementDirection::EBackward;
-		
 		// Determine if the movement is towards the right or left.
 		const bool isRight = (directionAngle >= 0.f);
 
@@ -249,7 +245,7 @@ void USamuraiBaseLinkedAnimInstance::UpdateIdleData()
 void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float directionAngle, const float blendWeight)
 {
 	// Set the flag indicating whether the character is moving forward or backward based on the local velocity direction.
-	SetIsMovingForwardOrBackward(IsMovingForwardOrBackward(LocalVelocityDirectionNoOffset));
+	SetIsMovingForwardOrBackward(USamuraiAnimationBPLibrary::IsMovingForwardOrBackward(LocalVelocityDirectionNoOffset));
 	
 	// Retrieve animation settings for the current stance and locomotion state
 	FSamuraiCycleAnimationSetSettings animationSetSettings;
@@ -258,9 +254,13 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float direc
 	// Calculate stride blend and play rate based on the obtained animation settings
 	CalculateStrideBlendAndPlayRate(animationSetSettings.AnimatedSpeed, animationSetSettings.StrideBlendRange,
 									animationSetSettings.PlayRateClamp, StrideBlend, PlayRate);
-
 	// Determine movement direction based on the given angle
-	CalculateMovementDirection(directionAngle, -90.f, 90.f, 5.f, MovementDirection, BlendSpaceDirection);
+	if (!IsOnPivot())
+	{
+		CalculateMovementDirection(directionAngle, -90.f, 90.f, 0.f, MovementDirection);
+	}
+
+	CalculateBlendSpaceDirection(directionAngle, BlendSpaceDirection);
 
 	// Set the blend weight for the locomotion cycle state.
 	LocomotionCycleBlendWeight = blendWeight;
@@ -278,6 +278,21 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailData(const bool 
 	// Set locomotion cycle detail play rate and start position based on the obtained animation settings
 	LocomotionCycleDetailPlayRate = animationSettings.PlayRate;
 	LocomotionCycleDetailStartPosition = animationSettings.StartPosition;
+	
+	// Check if the actor is currently on a pivot.
+	if (IsOnPivot())
+	{
+		// Increment the pivot time by the elapsed time since the last frame.
+		PivotTime += GetDeltaSeconds();
+
+		// Check if the pivot time exceeds the maximum threshold or if the actor is currently moving forward or backward.
+		if (PivotTime >= MaxThresholdPivotTime || IsMovingForwardOrBackward())
+		{
+			// Reset the pivot time to zero and mark the actor as no longer on a pivot.
+			PivotTime = 0.f;
+			SetIsOnPivot(false);
+		}
+	}
 }
 
 UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleDetailAnimation(const ESamuraiMovementDirection movementDirection) const
@@ -288,7 +303,7 @@ UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleDetailAnimation(const ES
 }
 
 UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleAnimationPose(const ESamuraiStance stance,
-                                                                      const FGameplayTag& locomotionStateTag) const
+                                                                      const FGameplayTag locomotionStateTag) const
 {
 	FSamuraiCycleAnimationSet animationSet;
 	GetCycleMovementAnimationSetByLocomotionState(stance, locomotionStateTag, animationSet);
@@ -297,7 +312,7 @@ UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleAnimationPose(const ESam
 
 UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleAnimation(const ESamuraiMovementDirection movementDirection,
                                                                   const ESamuraiStance stance,
-                                                                  const FGameplayTag& locomotionStateTag) const
+                                                                  const FGameplayTag locomotionStateTag) const
 {
 	FSamuraiCycleAnimationSet animationSet;
 	GetCycleMovementAnimationSetByLocomotionState(stance, locomotionStateTag, animationSet);
