@@ -81,6 +81,12 @@ bool USamuraiBaseLinkedAnimInstance::IsMovementDirectionForward() const
 	return (MovementDirection == ESamuraiMovementDirection::EForward);
 }
 
+bool USamuraiBaseLinkedAnimInstance::IsMovementSaveDirection(const ESamuraiMovementDirection movementDirectionA,
+	const ESamuraiMovementDirection movementDirectionB) const
+{
+	return (movementDirectionA == movementDirectionB);
+}
+
 ESamuraiMovementDirection USamuraiBaseLinkedAnimInstance::GetOppositeMovementDirection(const ESamuraiMovementDirection movementDirection) const
 {
 	ESamuraiMovementDirection result = ESamuraiMovementDirection::EForward;
@@ -239,7 +245,6 @@ void USamuraiBaseLinkedAnimInstance::CalculateBlendSpaceDirection(const float di
 void USamuraiBaseLinkedAnimInstance::UpdateIdleData()
 {
 	SetIsOnPivot(false);
-	PivotTime = 0.f;
 }
 
 void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float directionAngle, const float blendWeight)
@@ -255,7 +260,7 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float direc
 	CalculateStrideBlendAndPlayRate(animationSetSettings.AnimatedSpeed, animationSetSettings.StrideBlendRange,
 									animationSetSettings.PlayRateClamp, StrideBlend, PlayRate);
 	// Determine movement direction based on the given angle
-	if (!IsOnPivot())
+	if (!IsOnPivot() || IsMovingForwardOrBackward())
 	{
 		CalculateMovementDirection(directionAngle, -90.f, 90.f, 0.f, MovementDirection);
 	}
@@ -266,7 +271,7 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float direc
 	LocomotionCycleBlendWeight = blendWeight;
 }
 
-void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailData(const bool isPivot, const float blendWeight)
+void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailsData(const bool isPivot, const float blendWeight)
 {
 	// Retrieve locomotion cycle detail tag based on the provided blend weight
 	const FGameplayTag& locomotionCycleDetailTag = (isPivot) ? GTag_Movement_State_Pivot : GetLocomotionStateTagFromBlendWeight(blendWeight);
@@ -278,21 +283,26 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailData(const bool 
 	// Set locomotion cycle detail play rate and start position based on the obtained animation settings
 	LocomotionCycleDetailPlayRate = animationSettings.PlayRate;
 	LocomotionCycleDetailStartPosition = animationSettings.StartPosition;
-	
-	// Check if the actor is currently on a pivot.
-	if (IsOnPivot())
-	{
-		// Increment the pivot time by the elapsed time since the last frame.
-		PivotTime += GetDeltaSeconds();
+}
 
-		// Check if the pivot time exceeds the maximum threshold or if the actor is currently moving forward or backward.
-		if (PivotTime >= MaxThresholdPivotTime || IsMovingForwardOrBackward())
+void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailsRunningData(const float deltaTime)
+{
+	const bool isOnPivot = IsOnPivot();
+	if (isOnPivot)
+	{
+		TimePendingOutPivot += deltaTime;
+		if (TimePendingOutPivot >= MaxPendingPivotTime || IsMovingForwardOrBackward())
 		{
-			// Reset the pivot time to zero and mark the actor as no longer on a pivot.
-			PivotTime = 0.f;
+			TimePendingOutPivot = 0.f;
 			SetIsOnPivot(false);
 		}
 	}
+}
+
+void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailsWalkingData(const float deltaTime)
+{
+	SetIsOnPivot(false);
+	TimePendingOutPivot = 0.f;
 }
 
 UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleDetailAnimation(const ESamuraiMovementDirection movementDirection) const

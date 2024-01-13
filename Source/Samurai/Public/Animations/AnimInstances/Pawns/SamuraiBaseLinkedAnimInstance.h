@@ -55,6 +55,9 @@ protected: // ~ Helpers ~
 	bool IsMovementDirectionForward() const;
 	
 	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	bool IsMovementSaveDirection(const ESamuraiMovementDirection movementDirectionA, const ESamuraiMovementDirection movementDirectionB) const;
+	
+	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	ESamuraiMovementDirection GetOppositeMovementDirection(const ESamuraiMovementDirection movementDirection = ESamuraiMovementDirection::EBackward) const;
 	
 	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
@@ -175,7 +178,13 @@ protected:
 	 * @param blendWeight - The blend weight to determine the locomotion cycle detail.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
-	void UpdateLocomotionCycleDetailData(const bool isPivot, const float blendWeight);
+	void UpdateLocomotionCycleDetailsData(const bool isPivot, const float blendWeight);
+	
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
+	void UpdateLocomotionCycleDetailsRunningData(const float deltaTime);
+	
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
+	void UpdateLocomotionCycleDetailsWalkingData(const float deltaTime);
 	
 protected:
 	
@@ -251,10 +260,10 @@ protected:
 	uint8 bIsMovingForwardOrBackward : 1;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float PivotTime = 0.f;
+	float TimePendingOutPivot = 0.f;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float MaxThresholdPivotTime = 1.5f;
+	float MaxPendingPivotTime = 1.5f;
 	
 protected:
 	
