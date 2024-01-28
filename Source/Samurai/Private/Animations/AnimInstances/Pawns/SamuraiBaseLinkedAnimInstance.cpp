@@ -41,12 +41,12 @@ void USamuraiBaseLinkedAnimInstance::SetPivotMovementDirection(const ESamuraiMov
 	PivotMovementDirection = pivotMovementDirection;
 }
 
-uint8 USamuraiBaseLinkedAnimInstance::IsOnPivot() const
+bool USamuraiBaseLinkedAnimInstance::IsOnPivot() const
 {
 	return bIsOnPivot;
 }
 
-uint8 USamuraiBaseLinkedAnimInstance::IsMovingForwardOrBackward() const
+bool USamuraiBaseLinkedAnimInstance::IsMovingForwardOrBackward() const
 {
 	return bIsMovingForwardOrBackward;
 }

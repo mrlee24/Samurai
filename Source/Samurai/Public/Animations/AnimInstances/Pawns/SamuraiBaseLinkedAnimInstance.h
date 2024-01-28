@@ -24,10 +24,10 @@ protected:
 protected: // ~ Getters ~
 
 	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Getter Functions", meta = (BlueprintThreadSafe))
-	uint8 IsOnPivot() const;
+	bool IsOnPivot() const;
 	
 	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
-	uint8 IsMovingForwardOrBackward() const;
+	bool IsMovingForwardOrBackward() const;
 
 protected: // ~ Setters ~
 	
