@@ -155,6 +155,9 @@ protected: // ~ Helpers ~
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	void CalculateBlendSpaceDirection(const float directionAngle, float& outBlendSpaceDir) const;
 
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	void CalculateVelocityDirection(const float relativeX, float& outForwardDirection, float& outBackwardDirection);
+	
 protected:
 
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
@@ -185,6 +188,9 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
 	void UpdateLocomotionCycleDetailsWalkingData(const float deltaTime);
+	
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
+	void DebugMessage(FString message);
 	
 protected:
 	
@@ -257,6 +263,9 @@ protected:
 	uint8 bIsOnPivot : 1;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+	uint8 bIsFirstPivot : 1;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
 	uint8 bIsMovingForwardOrBackward : 1;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
@@ -264,6 +273,12 @@ protected:
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
 	float MaxPendingPivotTime = 1.5f;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+	float ForwardDirection = 0.f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+	float BackwardDirection = 0.f;
 	
 protected:
 	
@@ -275,6 +290,9 @@ protected:
 
 	// Cache the local velocity direction with no offset of the owner.
 	ESamuraiCardinalDirection LocalVelocityDirectionNoOffset = ESamuraiCardinalDirection::EForward;
+	
+	// Cache the local velocity direction with no offset of the owner.
+	FVector LocalVelocity2D = FVector::ZeroVector;
 
 	// Flag indicating whether the owner is currently crouching.
 	uint8 bIsCrouching : 1;

@@ -26,6 +26,7 @@ void USamuraiBaseLinkedAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 		OwningSpeed2D = BaseMainAnimInstance->GetSpeed2D();
 		bIsCrouching = BaseMainAnimInstance->GetPawnStateDate().bIsCrouching;
 		LocalVelocityDirectionNoOffset = BaseMainAnimInstance->GetVelocityData().LocalVelocityDirectionNoOffset;
+		LocalVelocity2D = BaseMainAnimInstance->GetVelocityData().LocalVelocity2D;
 	}
 }
 
@@ -242,6 +243,12 @@ void USamuraiBaseLinkedAnimInstance::CalculateBlendSpaceDirection(const float di
 	}
 }
 
+void USamuraiBaseLinkedAnimInstance::CalculateVelocityDirection(const float relativeX, float& outForwardDirection, float& outBackwardDirection)
+{
+	outForwardDirection = FMath::Clamp(relativeX, 0.f, 1.f);
+	outBackwardDirection = FMath::Abs(FMath::Clamp(relativeX, -1.f, 0.f));
+}
+
 void USamuraiBaseLinkedAnimInstance::UpdateIdleData()
 {
 	SetIsOnPivot(false);
@@ -264,6 +271,22 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float direc
 	{
 		CalculateMovementDirection(directionAngle, -90.f, 90.f, 0.f, MovementDirection);
 	}
+
+	float targetForwardDirection = 0.f;
+	float targetBackwardDirection = 0.f;
+	if (MovementDirection == ESamuraiMovementDirection::EForward)
+	{
+		targetForwardDirection = 1.f;
+		targetBackwardDirection = 0.f;
+	}
+	else
+	{
+		targetForwardDirection = 0.f;
+		targetBackwardDirection = 1.f;
+	}
+		
+	ForwardDirection = FMath::FInterpTo(ForwardDirection, targetForwardDirection, GetDeltaSeconds(), 12.f);
+	BackwardDirection = FMath::FInterpTo(BackwardDirection, targetBackwardDirection, GetDeltaSeconds(), 12.f);
 
 	CalculateBlendSpaceDirection(directionAngle, BlendSpaceDirection);
 
@@ -303,6 +326,11 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailsWalkingData(con
 {
 	SetIsOnPivot(false);
 	TimePendingOutPivot = 0.f;
+}
+
+void USamuraiBaseLinkedAnimInstance::DebugMessage(FString message)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, message);
 }
 
 UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleDetailAnimation(const ESamuraiMovementDirection movementDirection) const
