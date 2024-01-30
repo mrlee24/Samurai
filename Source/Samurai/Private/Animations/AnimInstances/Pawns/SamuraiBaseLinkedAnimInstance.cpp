@@ -283,8 +283,8 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float direc
 	FSamuraiMovementDirectionBlending targetBlending;
 	CalculateMovementDirectionBlending(targetBlending);
 		
-	MovementDirectionBlending.Forward = FMath::FInterpTo(MovementDirectionBlending.Forward, targetBlending.Forward, GetDeltaSeconds(), 12.f);
-	MovementDirectionBlending.Backward = FMath::FInterpTo(MovementDirectionBlending.Backward, targetBlending.Backward, GetDeltaSeconds(), 12.f);
+	MovementDirectionBlending.Forward = FMath::FInterpTo(MovementDirectionBlending.Forward, targetBlending.Forward, GetDeltaSeconds(), 6.f);
+	MovementDirectionBlending.Backward = FMath::FInterpTo(MovementDirectionBlending.Backward, targetBlending.Backward, GetDeltaSeconds(), 6.f);
 
 	CalculateBlendSpaceDirection(directionAngle, BlendSpaceDirection);
 
