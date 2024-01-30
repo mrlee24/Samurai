@@ -156,7 +156,7 @@ protected: // ~ Helpers ~
 	void CalculateBlendSpaceDirection(const float directionAngle, float& outBlendSpaceDir) const;
 
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
-	void CalculateVelocityDirection(const float relativeX, float& outForwardDirection, float& outBackwardDirection);
+	void CalculateMovementDirectionBlending(FSamuraiMovementDirectionBlending& outBlending);
 	
 protected:
 
@@ -275,10 +275,7 @@ protected:
 	float MaxPendingPivotTime = 1.5f;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float ForwardDirection = 0.f;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float BackwardDirection = 0.f;
+	FSamuraiMovementDirectionBlending MovementDirectionBlending;
 	
 protected:
 	

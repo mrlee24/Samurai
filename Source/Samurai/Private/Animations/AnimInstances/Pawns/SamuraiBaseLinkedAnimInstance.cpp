@@ -243,10 +243,18 @@ void USamuraiBaseLinkedAnimInstance::CalculateBlendSpaceDirection(const float di
 	}
 }
 
-void USamuraiBaseLinkedAnimInstance::CalculateVelocityDirection(const float relativeX, float& outForwardDirection, float& outBackwardDirection)
+void USamuraiBaseLinkedAnimInstance::CalculateMovementDirectionBlending(FSamuraiMovementDirectionBlending& outBlending)
 {
-	outForwardDirection = FMath::Clamp(relativeX, 0.f, 1.f);
-	outBackwardDirection = FMath::Abs(FMath::Clamp(relativeX, -1.f, 0.f));
+	if (MovementDirection == ESamuraiMovementDirection::EForward)
+	{
+		outBlending.Forward = 1.f;
+		outBlending.Backward = 0.f;
+	}
+	else
+	{
+		outBlending.Forward = 0.f;
+		outBlending.Backward = 1.f;
+	}
 }
 
 void USamuraiBaseLinkedAnimInstance::UpdateIdleData()
@@ -272,21 +280,11 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float direc
 		CalculateMovementDirection(directionAngle, -90.f, 90.f, 0.f, MovementDirection);
 	}
 
-	float targetForwardDirection = 0.f;
-	float targetBackwardDirection = 0.f;
-	if (MovementDirection == ESamuraiMovementDirection::EForward)
-	{
-		targetForwardDirection = 1.f;
-		targetBackwardDirection = 0.f;
-	}
-	else
-	{
-		targetForwardDirection = 0.f;
-		targetBackwardDirection = 1.f;
-	}
+	FSamuraiMovementDirectionBlending targetBlending;
+	CalculateMovementDirectionBlending(targetBlending);
 		
-	ForwardDirection = FMath::FInterpTo(ForwardDirection, targetForwardDirection, GetDeltaSeconds(), 12.f);
-	BackwardDirection = FMath::FInterpTo(BackwardDirection, targetBackwardDirection, GetDeltaSeconds(), 12.f);
+	MovementDirectionBlending.Forward = FMath::FInterpTo(MovementDirectionBlending.Forward, targetBlending.Forward, GetDeltaSeconds(), 12.f);
+	MovementDirectionBlending.Backward = FMath::FInterpTo(MovementDirectionBlending.Backward, targetBlending.Backward, GetDeltaSeconds(), 12.f);
 
 	CalculateBlendSpaceDirection(directionAngle, BlendSpaceDirection);
 

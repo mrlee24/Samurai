@@ -49,23 +49,17 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSamuraiVelocityBlend
+struct FSamuraiMovementDirectionBlending
 {
 	GENERATED_BODY()
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiVelocityData")
+	UPROPERTY(BlueprintReadWrite, Category = "SamuraiMovementDirectionBlending")
 	float Forward = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiVelocityData")
+	UPROPERTY(BlueprintReadWrite, Category = "SamuraiMovementDirectionBlending")
 	float Backward = 0.f;
-		
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiVelocityData")
-	float Left = 0.f;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiVelocityData")
-	float Right = 0.f;
 };
 
 USTRUCT(BlueprintType)
