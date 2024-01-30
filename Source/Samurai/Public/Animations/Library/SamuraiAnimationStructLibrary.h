@@ -49,17 +49,25 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FSamuraiMovementDirectionBlending
+struct FSamuraiVelocityBlend
 {
 	GENERATED_BODY()
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiMovementDirectionBlending")
+	UPROPERTY(BlueprintReadWrite, Category = "SamuraiVelocityBlend")
 	float Forward = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiMovementDirectionBlending")
+	UPROPERTY(BlueprintReadWrite, Category = "SamuraiVelocityBlend")
 	float Backward = 0.f;
+
+public:
+
+	FORCEINLINE void Reset()
+	{
+		Forward = 0.f;
+		Backward = 0.f;
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -456,6 +464,20 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SamuraiCycleAnimationSet")
 	FSamuraiCycleAnimationSetSettings AnimationSetSettings;
+};
+
+USTRUCT(BlueprintType)
+struct  FSamuraiCycleAnimationSets
+{
+	GENERATED_BODY()
+
+public:
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SamuraiCycleAnimationSets")
+	TMap<FGameplayTag, FSamuraiCycleAnimationSet> AnimationSets;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SamuraiCycleAnimationSets")
+	float VelocityBlendInterpSpeed = 6.f;
 };
 
 USTRUCT(BlueprintType)

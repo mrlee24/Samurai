@@ -28,17 +28,35 @@ protected: // ~ Getters ~
 	
 	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	bool IsMovingForwardOrBackward() const;
-
-protected: // ~ Setters ~
 	
-	UFUNCTION(BlueprintSetter, Category = "ThreadSafe - Setter Functions", meta = (BlueprintThreadSafe))
-	void SetPivotMovementDirection(const ESamuraiMovementDirection pivotMovementDirection);
+	UFUNCTION(BlueprintGetter, BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	const float& GetBlendSpaceDirection() const;
+
+	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	const float& GetBlendSpacePlayRate() const;
+	
+	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	const float& GetStrideBlend() const;
+	
+	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	const float& GetLocomotionCycleBlendWeight() const;
+	
+	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	const float& GetBlendSpaceDetailPlayRate() const;
+	
+	UFUNCTION(BlueprintGetter, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	const float& GetBlendSpaceDetailStartPosition() const;
+	
+protected: // ~ Setters ~
 	
 	UFUNCTION(BlueprintSetter, Category = "ThreadSafe - Setter Functions", meta = (BlueprintThreadSafe))
 	void SetIsOnPivot(const bool isOnPivot);
 	
 	UFUNCTION(BlueprintSetter, Category = "ThreadSafe - Setter Functions", meta = (BlueprintThreadSafe))
 	void SetIsMovingForwardOrBackward(const bool isForwardOrBackward);
+	
+	UFUNCTION(BlueprintSetter, Category = "ThreadSafe - Setter Functions", meta = (BlueprintThreadSafe))
+	void SetMovementDirection(const ESamuraiMovementDirection movementDirection);
 	
 protected: // ~ Helpers ~
 	
@@ -55,14 +73,14 @@ protected: // ~ Helpers ~
 	bool IsMovementDirectionForward() const;
 	
 	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
-	bool IsMovementSaveDirection(const ESamuraiMovementDirection movementDirectionA, const ESamuraiMovementDirection movementDirectionB) const;
-	
-	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	ESamuraiMovementDirection GetOppositeMovementDirection(const ESamuraiMovementDirection movementDirection = ESamuraiMovementDirection::EBackward) const;
 	
 	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	ESamuraiStance GetStance() const;
-
+	
+	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	const float& GetVelocityBlendInterpSpeed() const;
+	
 	/**
 	 * Determines the locomotion state tag based on the provided blend weight.
 	 *
@@ -140,7 +158,7 @@ protected: // ~ Helpers ~
 	                                     float& outStrideBlend, float& outPlayRate) const;
 
 	/**
-	 * Calculates the movement direction based on the provided parameters and updates the output variables.
+	 * @brief Calculates the movement direction based on the provided parameters and updates the output variables.
 	 *
 	 * @param directionAngle The angle representing the movement direction.
 	 * @param dirMin The minimum angle for the valid movement direction range.
@@ -151,12 +169,34 @@ protected: // ~ Helpers ~
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	void CalculateMovementDirection(const float directionAngle, const float dirMin, const float dirMax,
 	                                const float buffer, ESamuraiMovementDirection& outMovementDirection) const;
-	
+
+	/**
+	 * @brief Calculates the blend space direction based on the given direction angle.
+	 *
+	 * This function is responsible for determining the appropriate blend space direction
+	 * based on the input direction angle. If the character is moving forward, the output
+	 * direction is set directly to the input angle. If the character is not moving forward,
+	 * the direction is mapped to a new range for blend space, considering movement to the left
+	 * or right, and updated accordingly.
+	 *
+	 * @param directionAngle The angle representing the character's movement direction.
+	 * @param outBlendSpaceDir Reference to a float to store the calculated blend space direction.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	void CalculateBlendSpaceDirection(const float directionAngle, float& outBlendSpaceDir) const;
-
+	
+	/**
+	 * @brief Calculates velocity blend based on movement direction.
+	 *
+	 * This function is responsible for determining the velocity blend values
+	 * for forward and backward movement based on the current direction of the character.
+	 * If the character is moving forward, the 'Forward' blend is set to 1.0, and 'Backward' is set to 0.0.
+	 * If the character is not moving forward, the 'Forward' blend is set to 0.0, and 'Backward' is set to 1.0.
+	 *
+	 * @param outVelocityBlend Reference to a FSamuraiVelocityBlend struct to store the calculated blend values.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
-	void CalculateMovementDirectionBlending(FSamuraiMovementDirectionBlending& outBlending);
+	void CalculateVelocityBlend(FSamuraiVelocityBlend& outVelocityBlend);
 	
 protected:
 
@@ -211,7 +251,7 @@ protected:
 	FSamuraiIdleAndTurnInPlaceAnimSet IdleAndTurnInPlaceAnimSet_Standing;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Standing")
-	TMap<FGameplayTag, FSamuraiCycleAnimationSet> CycleAnimationSet_Standing;
+	FSamuraiCycleAnimationSets CycleAnimationSets_Standing;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Standing")
 	FSamuraiCycleDetailAnimationSet CycleDetailAnimationSet_Standing;
@@ -220,7 +260,7 @@ protected:
 	FSamuraiIdleAndTurnInPlaceAnimSet IdleAndTurnInPlaceAnimSet_Crouching;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Standing")
-	TMap<FGameplayTag, FSamuraiCycleAnimationSet> CycleAnimationSet_Crouching;
+	FSamuraiCycleAnimationSets CycleAnimationSets_Crouching;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Jumping")
 	FSamuraiJumpAnimSet JumpAnimationSet;
@@ -234,48 +274,49 @@ protected:
 	FGameplayTag LocomotionStateTag = FGameplayTag::EmptyTag;
 
 protected:
-	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+
+	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Cycle | BlendSpace Data")
 	float BlendSpaceDirection = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Cycle | BlendSpace Data")
+	float BlendSpacePlayRate = 0.f;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Cycle | BlendSpace Data")
 	float StrideBlend = 0.f;
+
+protected:
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float PlayRate = 0.f;
+	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Details | BlendSpace Data")
+	float BlendSpaceDetailPlayRate = 1.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	ESamuraiMovementDirection MovementDirection = ESamuraiMovementDirection::EForward;
+	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Details | BlendSpace Data")
+	float BlendSpaceDetailStartPosition = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	ESamuraiMovementDirection PivotMovementDirection = ESamuraiMovementDirection::EForward;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float LocomotionCycleBlendWeight = 0.f;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float LocomotionCycleDetailPlayRate = 1.f;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	float LocomotionCycleDetailStartPosition = 0.f;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Details | BlendSpace Data | Pivot")
 	uint8 bIsOnPivot : 1;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Details | BlendSpace Data | Pivot")
 	uint8 bIsFirstPivot : 1;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	uint8 bIsMovingForwardOrBackward : 1;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Details | BlendSpace Data | Pivot")
 	float TimePendingOutPivot = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Details | BlendSpace Data | Pivot")
 	float MaxPendingPivotTime = 1.5f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Anim Layer | Cycle")
-	FSamuraiMovementDirectionBlending MovementDirectionBlending;
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Details | BlendSpace Data | Pivot")
+	FSamuraiVelocityBlend VelocityBlend;
+
+protected:
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
+	uint8 bIsMovingForwardOrBackward : 1;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
+	ESamuraiMovementDirection MovementDirection = ESamuraiMovementDirection::EForward;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
+	float LocomotionCycleBlendWeight = 0.f;
 	
 protected:
 	
@@ -287,9 +328,6 @@ protected:
 
 	// Cache the local velocity direction with no offset of the owner.
 	ESamuraiCardinalDirection LocalVelocityDirectionNoOffset = ESamuraiCardinalDirection::EForward;
-	
-	// Cache the local velocity direction with no offset of the owner.
-	FVector LocalVelocity2D = FVector::ZeroVector;
 
 	// Flag indicating whether the owner is currently crouching.
 	uint8 bIsCrouching : 1;
