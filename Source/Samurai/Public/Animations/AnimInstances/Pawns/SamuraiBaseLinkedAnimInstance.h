@@ -20,6 +20,10 @@ protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float deltaSeconds) override;
 	virtual void NativeThreadSafeUpdateAnimation(float deltaSeconds) override;
+
+protected:
+
+	void UpdateSkeletalControls(float deltaSeconds);
 	
 protected: // ~ Getters ~
 
@@ -275,6 +279,8 @@ protected:
 
 protected:
 
+	/* Locomotion Cycle */
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Cycle | BlendSpace Data")
 	float BlendSpaceDirection = 0.f;
 	
@@ -284,7 +290,18 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Cycle | BlendSpace Data")
 	float StrideBlend = 0.f;
 
-protected:
+	/* Locomotion Cycle - State Machine Data */
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
+	uint8 bIsMovingForwardOrBackward : 1;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
+	ESamuraiMovementDirection MovementDirection = ESamuraiMovementDirection::EForward;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
+	float LocomotionCycleBlendWeight = 0.f;
+	
+	/* Locomotion Details */
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Locomotion Details | BlendSpace Data")
 	float BlendSpaceDetailPlayRate = 1.f;
@@ -308,16 +325,22 @@ protected:
 	FSamuraiVelocityBlend VelocityBlend;
 
 protected:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
+	float Enable_FootIK_L = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
-	uint8 bIsMovingForwardOrBackward : 1;
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
+	float Enable_FootIK_R = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
-	ESamuraiMovementDirection MovementDirection = ESamuraiMovementDirection::EForward;
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
+	float PelvisAlpha = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
+	float FootLock_L = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
-	float LocomotionCycleBlendWeight = 0.f;
-	
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
+	float FootLock_R = 0.f;
+
 protected:
 	
 	// Cache the 2D speed of the owner.

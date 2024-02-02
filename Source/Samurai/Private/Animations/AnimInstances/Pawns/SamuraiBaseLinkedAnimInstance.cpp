@@ -31,9 +31,19 @@ void USamuraiBaseLinkedAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 
 void USamuraiBaseLinkedAnimInstance::NativeThreadSafeUpdateAnimation(float deltaSeconds)
 {
-	// FSamuraiCycleAnimationSetSettings animationSettings;
-	// GetCycleMovementAnimationSetSettingsByLocomotionState(GetStance(), LocomotionStateTag, animationSettings);
-	// CalculateStrideBlendAndPlayRate(animationSettings.AnimatedSpeed, animationSettings.StrideBlendRange, animationSettings.PlayRateClamp, StrideBlend, PlayRate);
+	UpdateSkeletalControls(deltaSeconds);
+}
+
+void USamuraiBaseLinkedAnimInstance::UpdateSkeletalControls(float deltaSeconds)
+{
+	Enable_FootIK_L = GetCurveValue(NAME_Enable_FootIK_L);
+	Enable_FootIK_R = GetCurveValue(NAME_Enable_FootIK_R);
+
+	// Calculate the Pelvis Alpha by finding the average Foot IK weight. If the alpha is 0, clear the offset.
+	PelvisAlpha = (Enable_FootIK_L + Enable_FootIK_R) / 2.f;
+	
+	FootLock_L = GetCurveValue(NAME_FootLock_L);
+	FootLock_R = GetCurveValue(NAME_FootLock_R);
 }
 
 bool USamuraiBaseLinkedAnimInstance::IsOnPivot() const

@@ -13,7 +13,12 @@ static const FName NAME_RemainingTurnYaw(TEXT("RemainingTurnYaw"));
 static const FName NAME_GroundDistance(TEXT("GroundDistance"));
 
 // IK.
-static const FName NAME_DisableLegIK(TEXT("DisableLegIK"));
+static const FName NAME_Enable_FootIK_R(TEXT("Enable_FootIK_R"));
+static const FName NAME_Enable_FootIK_L(TEXT("Enable_FootIK_L"));
+static const FName NAME_Enable_HandIK_L(TEXT("Enable_HandIK_L"));
+static const FName NAME_Enable_HandIK_R(TEXT("Enable_HandIK_R"));
+static const FName NAME_FootLock_L(TEXT("FootLock_L"));
+static const FName NAME_FootLock_R(TEXT("FootLock_R"));
 
 /**
  * 
