@@ -113,7 +113,7 @@ public: // Getters ThreadSafe
 	const FSamuraiVelocityData& GetVelocityData() const;
 	
 	UFUNCTION(BlueprintGetter, meta = (BlueprintThreadSafe), Category = "Getters")
-	const FSamuraiPawnStateData& GetPawnStateDate() const;
+	const FSamuraiPawnStateData& GetPawnStateData() const;
 	
 protected:
 	

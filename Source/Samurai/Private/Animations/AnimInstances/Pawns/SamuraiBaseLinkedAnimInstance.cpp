@@ -27,13 +27,22 @@ void USamuraiBaseLinkedAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 
 	if (BaseMainAnimInstance)
 	{
+		// Pre-update data.
 		LocomotionStateTag = BaseMainAnimInstance->GetPreUpdateData().AnimationData.LocomotionStateTag;
+		bIsMovingOnGround = BaseMainAnimInstance->GetPreUpdateData().bIsMovingOnGround;
+		bIsAutonomousProxy = BaseMainAnimInstance->GetPreUpdateData().bIsAutonomousProxy;
+		
 		OwningSpeed2D = BaseMainAnimInstance->GetSpeed2D();
-		bIsCrouching = BaseMainAnimInstance->GetPawnStateDate().bIsCrouching;
+
+		// Pawn State Data.
+		bIsCrouching = BaseMainAnimInstance->GetPawnStateData().bIsCrouching;
+
+		// Velocity Data.
 		LocalVelocityDirectionNoOffset = BaseMainAnimInstance->GetVelocityData().LocalVelocityDirectionNoOffset;
 		Velocity = BaseMainAnimInstance->GetVelocityData().WorldVelocity;
+
+		// Rotation Data.
 		LastUpdateRotation = BaseMainAnimInstance->GetRotationData().WorldRotation;
-		bIsMovingOnGround = BaseMainAnimInstance->GetPreUpdateData().bIsMovingOnGround;
 	}
 	
 	UpdateSkeletalControls(deltaSeconds);

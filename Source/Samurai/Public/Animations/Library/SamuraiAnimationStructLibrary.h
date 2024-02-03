@@ -323,6 +323,12 @@ struct FSamuraiPreUpdateData
 public:
 	
 	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
+	FSamuraiPreUpdateAbilityData AbilityData;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
+	FSamuraiPreUpdateAnimationData AnimationData;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
 	FRotator ActorRotation = FRotator::ZeroRotator;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
@@ -339,6 +345,9 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
 	float GravityZ = 0.f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
+	uint8 bIsAutonomousProxy : 1;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
 	uint8 bIsCrouching : 1;
@@ -354,12 +363,6 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
 	uint8 bIsFlying : 1;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
-	FSamuraiPreUpdateAbilityData AbilityData;
-	
-	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
-	FSamuraiPreUpdateAnimationData AnimationData;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "SamuraiPreUpdateData")
 	uint8 bIsAnyMontagePlaying : 1;

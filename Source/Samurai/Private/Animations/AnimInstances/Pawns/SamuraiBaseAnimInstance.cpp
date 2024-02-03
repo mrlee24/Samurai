@@ -51,6 +51,7 @@ void USamuraiBaseAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 	{
 		// Pre-Update essential actor's properties.
 		{
+			PreUpdateData.bIsAutonomousProxy = OwningPawn->GetLocalRole() == ROLE_AutonomousProxy;
 			PreUpdateData.ActorRotation = OwningPawn->GetActorRotation();
 			PreUpdateData.ActorLocation = OwningPawn->GetActorLocation();
 			PreUpdateData.ActorVelocity = OwningPawn->GetVelocity();
@@ -424,7 +425,7 @@ const FSamuraiVelocityData& USamuraiBaseAnimInstance::GetVelocityData() const
 	return VelocityData;
 }
 
-const FSamuraiPawnStateData& USamuraiBaseAnimInstance::GetPawnStateDate() const
+const FSamuraiPawnStateData& USamuraiBaseAnimInstance::GetPawnStateData() const
 {
 	return PawnStateData;
 }

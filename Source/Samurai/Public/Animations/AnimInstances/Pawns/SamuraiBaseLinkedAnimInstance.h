@@ -388,8 +388,16 @@ protected:
 	// Flag indicating whether the owner is currently crouching.
 	uint8 bIsCrouching : 1;
 
+	// Flag indicating whether the owner is currently moving on ground.
 	uint8 bIsMovingOnGround : 1;
+
+	// Flag indicating whether the owner is autonomous proxy.
+	uint8 bIsAutonomousProxy : 1;
+
+	// Cache the Velocity of the owner.
 	FVector Velocity = FVector::ZeroVector;
+
+	// Cache the LastUpdateRotation of the owner from that last tick.
 	FRotator LastUpdateRotation = FRotator::ZeroRotator;
 
 	FSamuraiAnimationStateNativeDelegate IdleAnimationExitNativeDelegate;
