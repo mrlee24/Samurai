@@ -85,6 +85,9 @@ public: // Getters ThreadSafe
 	const FSamuraiPreUpdateData& GetPreUpdateData() const;
 	
 	UFUNCTION(BlueprintGetter, meta = (BlueprintThreadSafe), Category = "Getters")
+	const FSamuraiRotationData& GetRotationData() const;
+	
+	UFUNCTION(BlueprintGetter, meta = (BlueprintThreadSafe), Category = "Getters")
 	const FSamuraiVelocityData& GetVelocityData() const;
 	
 	UFUNCTION(BlueprintGetter, meta = (BlueprintThreadSafe), Category = "Getters")

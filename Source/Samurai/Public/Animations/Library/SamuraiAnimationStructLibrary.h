@@ -509,6 +509,93 @@ public:
 	FName DistanceCurveName = NAME_GroundDistance;
 };
 
+USTRUCT(BlueprintType)
+struct FSamuraiStopAnimationSettings
+{
+	GENERATED_BODY()
+
+public:
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SamuraiStopAnimationSettings")
+	float PlantLeftFoot = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SamuraiStopAnimationSettings")
+	float PlantRightFoot = 0.f;
+};
+
+USTRUCT(BlueprintType)
+struct FSamuraiStopAnimationSet
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SamuraiStopAnimationSet")
+	TObjectPtr<class UAnimSequence> AnimSequence = nullptr;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SamuraiStopAnimationSet")
+	FSamuraiStopAnimationSettings Settings;
+};
+
+USTRUCT(BlueprintType)
+struct FSamuraiBipedFootIK
+{
+	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FVector FootLock_L_Location = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FVector TargetFootLock_R_Location = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FVector FootLock_R_Location = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FRotator TargetFootLock_L_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FRotator FootLock_L_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FRotator TargetFootLock_R_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FRotator FootLock_R_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FVector FootOffset_L_Location = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FVector FootOffset_R_Location = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FRotator FootOffset_L_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FRotator FootOffset_R_Rotation = FRotator::ZeroRotator;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	FVector PelvisOffset = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	float FootLock_L_Alpha = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	float FootLock_R_Alpha = 0.0f;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	float PelvisAlpha = 0.0f;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	bool bUseFootLockCurve_L = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "SamuraiBipedFootIK")
+	bool bUseFootLockCurve_R = false;
+};
+
 #pragma endregion
 #pragma region : BlendMaskSet
 

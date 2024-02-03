@@ -377,6 +377,11 @@ const FSamuraiPreUpdateData& USamuraiBaseAnimInstance::GetPreUpdateData() const
 	return PreUpdateData;
 }
 
+const FSamuraiRotationData& USamuraiBaseAnimInstance::GetRotationData() const
+{
+	return RotationData;
+}
+
 const FSamuraiVelocityData& USamuraiBaseAnimInstance::GetVelocityData() const
 {
 	return VelocityData;

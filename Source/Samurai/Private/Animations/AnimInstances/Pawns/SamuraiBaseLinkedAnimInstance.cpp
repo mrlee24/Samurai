@@ -26,24 +26,227 @@ void USamuraiBaseLinkedAnimInstance::NativeUpdateAnimation(float deltaSeconds)
 		OwningSpeed2D = BaseMainAnimInstance->GetSpeed2D();
 		bIsCrouching = BaseMainAnimInstance->GetPawnStateDate().bIsCrouching;
 		LocalVelocityDirectionNoOffset = BaseMainAnimInstance->GetVelocityData().LocalVelocityDirectionNoOffset;
+		Velocity = BaseMainAnimInstance->GetVelocityData().WorldVelocity;
+		LastUpdateRotation = BaseMainAnimInstance->GetRotationData().WorldRotation;
+		bIsMovingOnGround = BaseMainAnimInstance->GetPreUpdateData().bIsMovingOnGround;
 	}
+	
+	UpdateSkeletalControls(deltaSeconds);
 }
 
 void USamuraiBaseLinkedAnimInstance::NativeThreadSafeUpdateAnimation(float deltaSeconds)
 {
-	UpdateSkeletalControls(deltaSeconds);
 }
 
 void USamuraiBaseLinkedAnimInstance::UpdateSkeletalControls(float deltaSeconds)
 {
-	Enable_FootIK_L = GetCurveValue(NAME_Enable_FootIK_L);
-	Enable_FootIK_R = GetCurveValue(NAME_Enable_FootIK_R);
+	FVector footOffsetLTarget = FVector::ZeroVector;
+	FVector footOffsetRTarget = FVector::ZeroVector;
 
+	// Update Foot Locking values.
+	SetFootLocking(deltaSeconds, NAME_Enable_FootIK_L, NAME_FootLock_L,
+				   NAME_IK_Foot_L, FootIKValues.FootLock_L_Alpha, FootIKValues.bUseFootLockCurve_L,
+				   FootIKValues.FootLock_L_Location, FootIKValues.FootLock_L_Rotation);
+	SetFootLocking(deltaSeconds, NAME_Enable_FootIK_R, NAME_FootLock_R,
+				   NAME_IK_Foot_R, FootIKValues.FootLock_R_Alpha, FootIKValues.bUseFootLockCurve_R,
+				   FootIKValues.FootLock_R_Location, FootIKValues.FootLock_R_Rotation);
+
+	// if (MovementState.InAir())
+	// {
+	// 	// Reset IK Offsets if In Air
+	// 	SetPelvisIKOffset(DeltaSeconds, FVector::ZeroVector, FVector::ZeroVector);
+	// 	ResetIKOffsets(DeltaSeconds);
+	// }
+	// else if (!MovementState.Ragdoll())
+	// {
+	// 	// Update all Foot Lock and Foot Offset values when not In Air
+	// 	SetFootOffsets(DeltaSeconds, NAME_Enable_FootIK_L, IkFootL_BoneName, NAME__ALSCharacterAnimInstance__root,
+	// 				   FootOffsetLTarget,
+	// 				   FootIKValues.FootOffset_L_Location, FootIKValues.FootOffset_L_Rotation);
+	// 	SetFootOffsets(DeltaSeconds, NAME_Enable_FootIK_R, IkFootR_BoneName, NAME__ALSCharacterAnimInstance__root,
+	// 				   FootOffsetRTarget,
+	// 				   FootIKValues.FootOffset_R_Location, FootIKValues.FootOffset_R_Rotation);
+	// 	SetPelvisIKOffset(DeltaSeconds, FootOffsetLTarget, FootOffsetRTarget);
+	// }
+
+	// Update all Foot Lock and Foot Offset values when not In Air
+	SetFootOffsets(deltaSeconds, NAME_Enable_FootIK_L, NAME_IK_Foot_L, NAME_RootBone,
+				   footOffsetLTarget,
+				   FootIKValues.FootOffset_L_Location, FootIKValues.FootOffset_L_Rotation);
+	SetFootOffsets(deltaSeconds, NAME_Enable_FootIK_R, NAME_Enable_FootIK_R, NAME_RootBone,
+				   footOffsetRTarget,
+				   FootIKValues.FootOffset_R_Location, FootIKValues.FootOffset_R_Rotation);
+	SetPelvisIKOffset(deltaSeconds, footOffsetLTarget, footOffsetRTarget);
+}
+
+void USamuraiBaseLinkedAnimInstance::SetFootLocking(float deltaSeconds, FName enableFootIKCurve, FName footLockCurve,
+                                                    FName ikFootBone, float& curFootLockAlpha, bool& useFootLockCurve,
+                                                    FVector& curFootLockLoc, FRotator& curFootLockRot)
+{
+	if (GetCurveValue(enableFootIKCurve) <= 0.0f)
+	{
+		return;
+	}
+
+	// Step 1: Set Local FootLock Curve value
+	float footLockCurveVal = 0.f;
+
+	if (useFootLockCurve)
+	{
+		useFootLockCurve = FMath::Abs(GetCurveValue(NAME_RootBone)) <= 0.001f; // || Character->GetLocalRole() != ROLE_AutonomousProxy;
+		footLockCurveVal = GetCurveValue(footLockCurve) * (1.f / GetSkelMeshComponent()->AnimUpdateRateParams->UpdateRate);
+	}
+	else
+	{
+		useFootLockCurve = GetCurveValue(footLockCurve) >= 0.99f;
+		footLockCurveVal = 0.0f;
+	}
+
+	// Step 2: Only update the FootLock Alpha if the new value is less than the current, or it equals 1. This makes it
+	// so that the foot can only blend out of the locked position or lock to a new position, and never blend in.
+	if (footLockCurveVal >= 0.99f || footLockCurveVal < curFootLockAlpha)
+	{
+		curFootLockAlpha = footLockCurveVal;
+	}
+
+	// Step 3: If the Foot Lock curve equals 1, save the new lock location and rotation in component space as the target.
+	if (curFootLockAlpha >= 0.99f)
+	{
+		const FTransform& ownerTransform =
+			GetOwningComponent()->GetSocketTransform(ikFootBone, RTS_Component);
+		curFootLockLoc = ownerTransform.GetLocation();
+		curFootLockRot = ownerTransform.Rotator();
+	}
+
+	// Step 4: If the Foot Lock Alpha has a weight,
+	// update the Foot Lock offsets to keep the foot planted in place while the capsule moves.
+	if (curFootLockAlpha > 0.0f)
+	{
+		SetFootLockOffsets(deltaSeconds, curFootLockLoc, curFootLockRot);
+	}
+}
+
+void USamuraiBaseLinkedAnimInstance::SetFootLockOffsets(float deltaSeconds, FVector& localLoc, FRotator& localRot)
+{
+	FRotator rotationDifference = FRotator::ZeroRotator;
+	// Use the delta between the current and last updated rotation to find how much the foot should be rotated
+	// to remain planted on the ground.
+	if (bIsMovingOnGround)
+	{
+		rotationDifference = GetOwningActor()->GetActorRotation() - LastUpdateRotation;
+		rotationDifference.Normalize();
+	}
+
+	// Get the distance traveled between frames relative to the mesh rotation
+	// to find how much the foot should be offset to remain planted on the ground.
+	const FVector& LocationDifference = GetOwningComponent()->GetComponentRotation().UnrotateVector(
+		Velocity * deltaSeconds);
+
+	// Subtract the location difference from the current local location and rotate
+	// it by the rotation difference to keep the foot planted in component space.
+	localLoc = (localLoc - LocationDifference).RotateAngleAxis(rotationDifference.Yaw, FVector::DownVector);
+
+	// Subtract the Rotation Difference from the current Local Rotation to get the new local rotation.
+	FRotator delta = localRot - rotationDifference;
+	delta.Normalize();
+	localRot = delta;
+}
+
+void USamuraiBaseLinkedAnimInstance::SetPelvisIKOffset(float deltaSeconds, FVector footOffsetLTarget,
+                                                       FVector footOffsetRTarget)
+{
 	// Calculate the Pelvis Alpha by finding the average Foot IK weight. If the alpha is 0, clear the offset.
-	PelvisAlpha = (Enable_FootIK_L + Enable_FootIK_R) / 2.f;
-	
-	FootLock_L = GetCurveValue(NAME_FootLock_L);
-	FootLock_R = GetCurveValue(NAME_FootLock_R);
+	FootIKValues.PelvisAlpha =
+		(GetCurveValue(NAME_Enable_FootIK_L) + GetCurveValue(NAME_Enable_FootIK_R)) / 2.0f;
+
+	if (FootIKValues.PelvisAlpha > 0.0f)
+	{
+		// Step 1: Set the new Pelvis Target to be the lowest Foot Offset
+		const FVector PelvisTarget = footOffsetLTarget.Z < footOffsetRTarget.Z ? footOffsetLTarget : footOffsetRTarget;
+
+		// Step 2: Interp the Current Pelvis Offset to the new target value.
+		//Interpolate at different speeds based on whether the new target is above or below the current one.
+		const float InterpSpeed = PelvisTarget.Z > FootIKValues.PelvisOffset.Z ? 10.0f : 15.0f;
+		FootIKValues.PelvisOffset =
+			FMath::VInterpTo(FootIKValues.PelvisOffset, PelvisTarget, deltaSeconds, InterpSpeed);
+	}
+	else
+	{
+		FootIKValues.PelvisOffset = FVector::ZeroVector;
+	}
+}
+
+void USamuraiBaseLinkedAnimInstance::ResetIKOffsets(float deltaSeconds)
+{
+	// Interp Foot IK offsets back to 0
+	FootIKValues.FootOffset_L_Location = FMath::VInterpTo(FootIKValues.FootOffset_L_Location,
+														  FVector::ZeroVector, deltaSeconds, 15.0f);
+	FootIKValues.FootOffset_R_Location = FMath::VInterpTo(FootIKValues.FootOffset_R_Location,
+														  FVector::ZeroVector, deltaSeconds, 15.0f);
+	FootIKValues.FootOffset_L_Rotation = FMath::RInterpTo(FootIKValues.FootOffset_L_Rotation,
+														  FRotator::ZeroRotator, deltaSeconds, 15.0f);
+	FootIKValues.FootOffset_R_Rotation = FMath::RInterpTo(FootIKValues.FootOffset_R_Rotation,
+														  FRotator::ZeroRotator, deltaSeconds, 15.0f);
+}
+
+void USamuraiBaseLinkedAnimInstance::SetFootOffsets(float deltaSeconds, FName enableFootIKCurve, FName ikFootBone,
+                                                    FName rootBone, FVector& curLocationTarget,
+                                                    FVector& curLocationOffset, FRotator& curRotationOffset)
+{
+	// Only update Foot IK offset values if the Foot IK curve has a weight. If it equals 0, clear the offset values.
+	if (GetCurveValue(enableFootIKCurve) <= 0)
+	{
+		curLocationOffset = FVector::ZeroVector;
+		curRotationOffset = FRotator::ZeroRotator;
+		return;
+	}
+
+	// Step 1: Trace downward from the foot location to find the geometry.
+	// If the surface is walkable, save the Impact Location and Normal.
+	USkeletalMeshComponent* ownerComp = GetOwningComponent();
+	FVector ikFootFloorLoc = ownerComp->GetSocketLocation(ikFootBone);
+	ikFootFloorLoc.Z = ownerComp->GetSocketLocation(rootBone).Z;
+
+	UWorld* world = GetWorld();
+	check(world);
+
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(GetOwningActor());
+
+	const FVector traceStart = ikFootFloorLoc + FVector(0.0, 0.0, IK_TraceDistanceAboveFoot);
+	const FVector traceEnd = ikFootFloorLoc - FVector(0.0, 0.0, IK_TraceDistanceBelowFoot);
+
+	FHitResult hitResult;
+	const bool isHit = world->LineTraceSingleByChannel(hitResult,
+	                                                  traceStart,
+	                                                  traceEnd,
+	                                                  ECC_Visibility, params);
+
+	FRotator targetRotOffset = FRotator::ZeroRotator;
+	if (isHit)
+	{
+		FVector impactPoint = hitResult.ImpactPoint;
+		FVector impactNormal = hitResult.ImpactNormal;
+
+		// Step 1.1: Find the difference in location from the Impact point and the expected (flat) floor location.
+		// These values are offset by the normal multiplied by the
+		// foot height to get better behavior on angled surfaces.
+		curLocationTarget = (impactPoint + impactNormal * 13.5f) -
+			(ikFootFloorLoc + FVector(0, 0, 13.5f));
+
+		// Step 1.2: Calculate the Rotation offset by getting the Atan2 of the Impact Normal.
+		targetRotOffset.Pitch = -FMath::RadiansToDegrees(FMath::Atan2(impactNormal.X, impactNormal.Z));
+		targetRotOffset.Roll = FMath::RadiansToDegrees(FMath::Atan2(impactNormal.Y, impactNormal.Z));
+	}
+
+	// Step 2: Interp the Current Location Offset to the new target value.
+	// Interpolate at different speeds based on whether the new target is above or below the current one.
+	const float interpSpeed = curLocationOffset.Z > curLocationTarget.Z ? 30.f : 15.0f;
+	curLocationOffset = FMath::VInterpTo(curLocationOffset, curLocationTarget, deltaSeconds, interpSpeed);
+
+	// Step 3: Interp the Current Rotation Offset to the new target value.
+	curRotationOffset = FMath::RInterpTo(curRotationOffset, targetRotOffset, deltaSeconds, 30.0f);
+
 }
 
 bool USamuraiBaseLinkedAnimInstance::IsOnPivot() const
@@ -300,6 +503,42 @@ void USamuraiBaseLinkedAnimInstance::CalculateVelocityBlend(FSamuraiVelocityBlen
 	}
 }
 
+void USamuraiBaseLinkedAnimInstance::CalculateHipDirection(const ESamuraiCardinalDirection cardinalDirection,
+                                                           ESamuraiHipDirection& outHipDirection) const
+{
+	const bool isMovementDirectionForward = IsMovementDirectionForward();
+	if (isMovementDirectionForward)
+	{
+		if (cardinalDirection == ESamuraiCardinalDirection::ERight)
+		{
+			outHipDirection = ESamuraiHipDirection::ERightForward;
+		}
+		else if (cardinalDirection == ESamuraiCardinalDirection::ELeft)
+		{
+			outHipDirection = ESamuraiHipDirection::ELeftForward;
+		}
+		else
+		{
+			outHipDirection = ESamuraiHipDirection::EForward;
+		}
+	}
+	else
+	{
+		if (cardinalDirection == ESamuraiCardinalDirection::ERight)
+		{
+			outHipDirection = ESamuraiHipDirection::ERightBackward;
+		}
+		else if (cardinalDirection == ESamuraiCardinalDirection::ELeft)
+		{
+			outHipDirection = ESamuraiHipDirection::ELeftBackward;
+		}
+		else
+		{
+			outHipDirection = ESamuraiHipDirection::EBackward;
+		}
+	}
+}
+
 void USamuraiBaseLinkedAnimInstance::UpdateIdleData()
 {
 	SetIsOnPivot(false);
@@ -333,8 +572,9 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleData(const float direc
 	VelocityBlend.Forward = FMath::FInterpTo(VelocityBlend.Forward, targetVelocityBlend.Forward, GetDeltaSeconds(), velocityBlendInterpSpeed);
 	VelocityBlend.Backward = FMath::FInterpTo(VelocityBlend.Backward, targetVelocityBlend.Backward, GetDeltaSeconds(), velocityBlendInterpSpeed);
 
+	CalculateHipDirection(LocalVelocityDirectionNoOffset, HipDirection);
+
 	// Calculate the blend space direction based on the character's movement angle
-	CalculateBlendSpaceDirection(directionAngle, BlendSpaceDirection);
 	CalculateBlendSpaceDirection(directionAngle, BlendSpaceDirection);
 
 	// Set the blend weight for the locomotion cycle state.
@@ -403,4 +643,11 @@ UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleAnimation(const ESamurai
 	GetCycleMovementAnimationSetByLocomotionState(stance, locomotionStateTag, animationSet);
 
 	return (movementDirection == ESamuraiMovementDirection::EForward ? animationSet.Forward : animationSet.Backward);
+}
+
+UAnimSequence* USamuraiBaseLinkedAnimInstance::SelectStopAnimation(const ESamuraiStance stance, const ESamuraiHipDirection hipDirection, const bool isLeftFoot, float& outExplicitTime) const
+{
+	const FSamuraiStopAnimationSet animationSet = StopAnimationSets_Standing.FindChecked(hipDirection);
+	outExplicitTime = (isLeftFoot) ? animationSet.Settings.PlantLeftFoot : animationSet.Settings.PlantRightFoot;
+	return animationSet.AnimSequence;
 }

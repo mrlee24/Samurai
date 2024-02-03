@@ -23,7 +23,24 @@ protected:
 
 protected:
 
-	void UpdateSkeletalControls(float deltaSeconds);
+	virtual void UpdateSkeletalControls(float deltaSeconds);
+
+protected:
+
+	// ~ Foot IK ~
+
+	void SetFootLocking(float deltaSeconds, FName enableFootIKCurve, FName footLockCurve, FName ikFootBone,
+						  float& curFootLockAlpha, bool& useFootLockCurve,
+						  FVector& curFootLockLoc, FRotator& curFootLockRot);
+
+	void SetFootLockOffsets(float deltaSeconds, FVector& localLoc, FRotator& localRot);
+
+	void SetPelvisIKOffset(float deltaSeconds, FVector footOffsetLTarget, FVector footOffsetRTarget);
+
+	void ResetIKOffsets(float deltaSeconds);
+
+	void SetFootOffsets(float deltaSeconds, FName enableFootIKCurve, FName ikFootBone, FName rootBone,
+						  FVector& curLocationTarget, FVector& curLocationOffset, FRotator& curRotationOffset);
 	
 protected: // ~ Getters ~
 
@@ -202,6 +219,9 @@ protected: // ~ Helpers ~
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
 	void CalculateVelocityBlend(FSamuraiVelocityBlend& outVelocityBlend);
 	
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - Helper Functions", meta = (BlueprintThreadSafe))
+	void CalculateHipDirection(const ESamuraiCardinalDirection cardinalDirection, ESamuraiHipDirection& outHipDirection) const;
+	
 protected:
 
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
@@ -249,6 +269,9 @@ protected:
 	class UBlendSpace* SelectCycleAnimation(const ESamuraiMovementDirection movementDirection,
 											const ESamuraiStance stance, const FGameplayTag locomotionStateTag) const;
 	
+	UFUNCTION(BlueprintPure, Category = "ThreadSafe - Selector Functions", meta = (BlueprintThreadSafe))
+	class UAnimSequence* SelectStopAnimation(const ESamuraiStance stance, const ESamuraiHipDirection hipDirection, const bool isLeftFoot, float& outExplicitTime) const;
+	
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Standing")
@@ -259,6 +282,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Standing")
 	FSamuraiCycleDetailAnimationSet CycleDetailAnimationSet_Standing;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Standing")
+	TMap<ESamuraiHipDirection, FSamuraiStopAnimationSet> StopAnimationSets_Standing;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Anim Set | Crouching")
 	FSamuraiIdleAndTurnInPlaceAnimSet IdleAndTurnInPlaceAnimSet_Crouching;
@@ -299,6 +325,9 @@ protected:
 	ESamuraiMovementDirection MovementDirection = ESamuraiMovementDirection::EForward;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
+	ESamuraiHipDirection HipDirection = ESamuraiHipDirection::EForward;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Locomotion Cycle | State Machine Data")
 	float LocomotionCycleBlendWeight = 0.f;
 	
 	/* Locomotion Details */
@@ -326,20 +355,15 @@ protected:
 
 protected:
 
-	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
-	float Enable_FootIK_L = 0.f;
-	
-	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
-	float Enable_FootIK_R = 0.f;
-	
-	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
-	float PelvisAlpha = 0.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
-	float FootLock_L = 0.f;
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Control - Foot IK | Settings")
+	float IK_TraceDistanceAboveFoot = 50.0f;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Controls")
-	float FootLock_R = 0.f;
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Control - Foot IK | Settings")
+	float IK_TraceDistanceBelowFoot = 45.0f;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Skeletal Control - Foot IK | Runtime")
+	FSamuraiBipedFootIK FootIKValues;
 
 protected:
 	
@@ -354,4 +378,8 @@ protected:
 
 	// Flag indicating whether the owner is currently crouching.
 	uint8 bIsCrouching : 1;
+
+	uint8 bIsMovingOnGround : 1;
+	FVector Velocity = FVector::ZeroVector;
+	FRotator LastUpdateRotation = FRotator::ZeroRotator;
 };

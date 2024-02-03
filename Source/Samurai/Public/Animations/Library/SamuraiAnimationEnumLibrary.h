@@ -22,6 +22,17 @@ enum class ESamuraiMovementDirection : uint8
 };
 
 UENUM(BlueprintType)
+enum class ESamuraiHipDirection : uint8
+{
+	EForward,
+	EBackward,
+	ERightForward,
+	ERightBackward,
+	ELeftForward,
+	ELeftBackward
+};
+
+UENUM(BlueprintType)
 enum class ESamuraiRootYawOffsetMode : uint8
 {
 	EBlendOut,
