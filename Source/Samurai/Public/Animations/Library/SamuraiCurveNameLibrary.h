@@ -26,6 +26,9 @@ static const FName NAME_IK_Foot_R(TEXT("ik_foot_r"));
 static const FName NAME_IK_Foot_L(TEXT("ik_foot_l"));
 static const FName NAME_RootBone(TEXT("root"));
 
+// Montage Slots.
+static const FName NAME_GroundedSlot(TEXT("GroundedSlot"));
+
 /**
  * 
  */

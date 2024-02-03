@@ -11,6 +11,31 @@
 #include "SamuraiAnimationStructLibrary.generated.h"
 
 #pragma region : BaseAnimInstance
+
+USTRUCT(BlueprintType)
+struct FSamuraiDynamicMontageParams
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Samurai|Dynamic Transition")
+	TObjectPtr<UAnimSequenceBase> Animation = nullptr;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Samurai|Dynamic Transition")
+	FName SlotName = NAME_None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Samurai|Dynamic Transition")
+	float BlendInTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Samurai|Dynamic Transition")
+	float BlendOutTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Samurai|Dynamic Transition")
+	float PlayRate = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Samurai|Dynamic Transition")
+	float StartTime = 0.0f;
+};
+
 USTRUCT(BlueprintType)
 struct FSamuraiRotationData
 {
