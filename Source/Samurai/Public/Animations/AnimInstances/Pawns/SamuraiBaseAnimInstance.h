@@ -8,6 +8,8 @@
 #include "Animations/Library/SamuraiAnimationStructLibrary.h"
 #include "SamuraiBaseAnimInstance.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FSamuraiAnimationStateNativeDelegate, const FSamuraiDynamicMontageParams&);
+
 /**
  * 
  */
@@ -73,6 +75,26 @@ protected:
 	UFUNCTION(BlueprintPure, meta = (BlueprintThreadSafe), Category = "Pivot")
 	bool IsMovingPerpendicularToInitialPivot() const;
 
+public: // Events
+
+	/* Event Getters */
+	FSamuraiAnimationStateNativeDelegate& GetIdleAnimationExitNativeDelegate();
+	FSamuraiAnimationStateNativeDelegate& GetStopAnimationEnterNativeDelegate();
+
+	/* Event Handlers */
+	void HandleOnIdleAnimationExit(const FSamuraiDynamicMontageParams& params);
+	void HandleOnStopAnimationEnter(const FSamuraiDynamicMontageParams& params);
+
+protected:
+
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Events", meta = (BlueprintThreadSafe))
+	void BroadcastIdleAnimationExit(FSamuraiDynamicMontageParams params);
+
+protected:
+	
+	UFUNCTION(BlueprintCallable, Category = "Samurai|Animation")
+	void PlayTransition(const FSamuraiDynamicMontageParams& params);
+	
 public: // Getters ThreadSafe
 	
 	UFUNCTION(BlueprintGetter, meta = (BlueprintThreadSafe), Category = "Getters")
@@ -143,6 +165,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "SamuraiBaseAnimInstance")
 	uint8 bEnableRootYawOffset : 1;
 
+protected: // Events
+
+	FSamuraiAnimationStateNativeDelegate IdleAnimationExitNativeDelegate;
+	FSamuraiAnimationStateNativeDelegate StopAnimationEnterNativeDelegate;
+	
 protected: // Components
 	
 	TScriptInterface<class IGameplayTagAssetInterface> GameplayTagInterface;

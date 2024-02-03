@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SamuraiBaseAnimInstance.h"
 #include "Animations/Library/SamuraiAnimationEnumLibrary.h"
 #include "Animations/Library/SamuraiAnimationStructLibrary.h"
 #include "SamuraiBaseLinkedAnimInstance.generated.h"
@@ -255,6 +256,14 @@ protected:
 	
 	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Update Functions", meta = (BlueprintThreadSafe))
 	void DebugMessage(FString message);
+
+protected:
+
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Events", meta = (BlueprintThreadSafe))
+	void BroadcastIdleAnimationExit(FSamuraiDynamicMontageParams params);
+	
+	UFUNCTION(BlueprintCallable, Category = "ThreadSafe - ThreadSafe Events", meta = (BlueprintThreadSafe))
+	void BroadcastStopAnimationEnter(FSamuraiDynamicMontageParams params);
 	
 protected:
 	
@@ -382,4 +391,7 @@ protected:
 	uint8 bIsMovingOnGround : 1;
 	FVector Velocity = FVector::ZeroVector;
 	FRotator LastUpdateRotation = FRotator::ZeroRotator;
+
+	FSamuraiAnimationStateNativeDelegate IdleAnimationExitNativeDelegate;
+	FSamuraiAnimationStateNativeDelegate StopAnimationEnterNativeDelegate;
 };

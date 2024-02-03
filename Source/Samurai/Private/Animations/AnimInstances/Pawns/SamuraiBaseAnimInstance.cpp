@@ -4,7 +4,6 @@
 #include "Animations/AnimInstances/Pawns/SamuraiBaseAnimInstance.h"
 
 #include "AbilitySystemComponent.h"
-#include "AbilitySystemGlobals.h"
 #include "KismetAnimationLibrary.h"
 #include "SamuraiGameplayTags.h"
 #include "Animations/Components/SamuraiLocomotionComponent.h"
@@ -38,6 +37,9 @@ void USamuraiBaseAnimInstance::NativeInitializeAnimation()
 		{
 			LocomotionComponent = MovableInterface->GetLocomotionComponent();
 		}
+
+		IdleAnimationExitNativeDelegate.AddUObject(this, &USamuraiBaseAnimInstance::HandleOnIdleAnimationExit);
+		StopAnimationEnterNativeDelegate.AddUObject(this, &USamuraiBaseAnimInstance::HandleOnStopAnimationEnter);
 	}
 }
 
@@ -360,6 +362,41 @@ bool USamuraiBaseAnimInstance::IsMovingPerpendicularToInitialPivot() const
 	const bool isPivotHorizontalDirPerpendicularToVerticalDir = (isInitialPivotDirHorizontalDir && !isLocalVelocityHorizontalDir);
 
 	return isPivotVerticalDirPerpendicularToVelocityDir || isPivotHorizontalDirPerpendicularToVerticalDir;
+}
+
+FSamuraiAnimationStateNativeDelegate& USamuraiBaseAnimInstance::GetIdleAnimationExitNativeDelegate()
+{
+	return IdleAnimationExitNativeDelegate;
+}
+
+FSamuraiAnimationStateNativeDelegate& USamuraiBaseAnimInstance::GetStopAnimationEnterNativeDelegate()
+{
+	return StopAnimationEnterNativeDelegate;
+}
+
+void USamuraiBaseAnimInstance::HandleOnIdleAnimationExit(const FSamuraiDynamicMontageParams& params)
+{
+	StopSlotAnimation(params.BlendOutTime, params.SlotName);
+}
+
+void USamuraiBaseAnimInstance::HandleOnStopAnimationEnter(const FSamuraiDynamicMontageParams& params)
+{
+	PlayTransition(params);
+}
+
+void USamuraiBaseAnimInstance::BroadcastIdleAnimationExit(FSamuraiDynamicMontageParams params)
+{
+	if (IdleAnimationExitNativeDelegate.IsBound())
+	{
+		IdleAnimationExitNativeDelegate.Broadcast(params);
+	}
+}
+
+void USamuraiBaseAnimInstance::PlayTransition(const FSamuraiDynamicMontageParams& params)
+{
+	PlaySlotAnimationAsDynamicMontage(params.Animation, params.SlotName,
+								  params.BlendInTime, params.BlendOutTime, params.PlayRate, 1,
+								  0.0f, params.StartTime);
 }
 
 const float& USamuraiBaseAnimInstance::GetDisplacementSpeed() const

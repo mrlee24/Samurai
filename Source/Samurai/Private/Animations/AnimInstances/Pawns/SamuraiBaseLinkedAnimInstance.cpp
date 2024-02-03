@@ -12,6 +12,11 @@ void USamuraiBaseLinkedAnimInstance::NativeInitializeAnimation()
 	// Don't call Super since it is empty.
 
 	BaseMainAnimInstance = Cast<USamuraiBaseAnimInstance>(GetOwningComponent()->GetAnimInstance());
+	if (BaseMainAnimInstance)
+	{
+		IdleAnimationExitNativeDelegate = BaseMainAnimInstance->GetIdleAnimationExitNativeDelegate();
+		StopAnimationEnterNativeDelegate = BaseMainAnimInstance->GetStopAnimationEnterNativeDelegate();
+	}
 
 	OwningComponentZScale = GetOwningComponent()->GetComponentScale().Z;
 }
@@ -618,6 +623,22 @@ void USamuraiBaseLinkedAnimInstance::UpdateLocomotionCycleDetailsWalkingData(con
 void USamuraiBaseLinkedAnimInstance::DebugMessage(FString message)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, message);
+}
+
+void USamuraiBaseLinkedAnimInstance::BroadcastIdleAnimationExit(FSamuraiDynamicMontageParams params)
+{
+	if (IdleAnimationExitNativeDelegate.IsBound())
+	{
+		IdleAnimationExitNativeDelegate.Broadcast(params);
+	}
+}
+
+void USamuraiBaseLinkedAnimInstance::BroadcastStopAnimationEnter(FSamuraiDynamicMontageParams params)
+{
+	if (StopAnimationEnterNativeDelegate.IsBound())
+	{
+		StopAnimationEnterNativeDelegate.Broadcast(params);
+	}
 }
 
 UBlendSpace* USamuraiBaseLinkedAnimInstance::SelectCycleDetailAnimation(const ESamuraiMovementDirection movementDirection) const
