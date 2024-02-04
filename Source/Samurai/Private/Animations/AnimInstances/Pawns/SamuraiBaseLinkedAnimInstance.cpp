@@ -153,12 +153,12 @@ void USamuraiBaseLinkedAnimInstance::SetFootLockOffsets(float deltaSeconds, FVec
 
 	// Get the distance traveled between frames relative to the mesh rotation
 	// to find how much the foot should be offset to remain planted on the ground.
-	const FVector& LocationDifference = GetOwningComponent()->GetComponentRotation().UnrotateVector(
+	const FVector& locationDifference = GetOwningComponent()->GetComponentRotation().UnrotateVector(
 		Velocity * deltaSeconds);
 
 	// Subtract the location difference from the current local location and rotate
 	// it by the rotation difference to keep the foot planted in component space.
-	localLoc = (localLoc - LocationDifference).RotateAngleAxis(rotationDifference.Yaw, FVector::DownVector);
+	localLoc = (localLoc - locationDifference).RotateAngleAxis(rotationDifference.Yaw, FVector::DownVector);
 
 	// Subtract the Rotation Difference from the current Local Rotation to get the new local rotation.
 	FRotator delta = localRot - rotationDifference;
